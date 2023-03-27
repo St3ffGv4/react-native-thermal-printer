@@ -37,6 +37,7 @@ import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.bridge.WritableNativeMap;
+import com.facebook.react.bridge.ReadableArray;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -60,6 +61,30 @@ public class ThermalPrinterModule extends ReactContextBaseJavaModule {
   @NonNull
   public String getName() {
     return NAME;
+  }
+
+  @ReactMethod
+  public void printTcpRaw(String ipAddress, double port, ReadableArray message, double timeout, Promise promise) {
+    this.jsPromise = promise;
+    try {
+      TcpConnection connection = new TcpConnection(ipAddress, (int) port, (int) timeout);
+      
+      connection.connect();
+
+      byte[] decoded = new byte[message.size()];
+      for (int i = 0; i < message.size(); i++) {
+        decoded[i] = new Integer(message.getInt(i)).byteValue();
+      }
+
+      connection.write(decoded);
+      connection.send();
+
+      connection.disconnect();
+      
+      this.jsPromise.resolve(true);
+    } catch (Exception e) {
+      this.jsPromise.reject("Connection Error", e.getMessage());
+    }
   }
 
   @ReactMethod

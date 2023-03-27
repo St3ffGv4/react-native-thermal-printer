@@ -19,6 +19,12 @@ type NativeModuleType = typeof NativeModules & {
       printerNbrCharactersPerLine: number,
       timeout: number
     ): Promise<void>;
+    printTcpRaw(
+      ip: string,
+      port: number,
+      message: Array<number>,
+      timeout: number
+    ): Promise<void>;
     printBluetooth(
       macAddress: string,
       payload: string,
@@ -52,6 +58,13 @@ interface PrintTcpInterface extends PrinterInterface {
   timeout: number;
 }
 
+interface PrintTcpRawInterface {
+  ip: string;
+  port: number;
+  message: Array<number>;
+  timeout: number;
+}
+
 interface PrintBluetoothInterface extends PrinterInterface {
   macAddress: string;
 }
@@ -74,6 +87,29 @@ const getConfig = (
   args: Partial<typeof defaultConfig>
 ): typeof defaultConfig => {
   return Object.assign({}, defaultConfig, args);
+};
+
+const printTcpRaw = async (
+  args: Partial<PrintTcpRawInterface> & Pick<PrinterInterface, 'payload'>
+): Promise<void> => {
+  const {
+    ip,
+    port,
+    message,
+    timeout,
+  } = Object.assign({}, {
+    ip: '',
+    port: 9100,
+    timeout: 30000,
+    message: []
+  }, args);
+
+  await ThermalPrinterModule.printTcpRaw(
+    ip,
+    port,
+    message,
+    timeout
+  );
 };
 
 const printTcp = async (
@@ -138,6 +174,7 @@ const getBluetoothDeviceList = (): Promise<BluetoothPrinter[]> => {
 
 export default {
   printTcp,
+  printTcpRaw,
   printBluetooth,
   defaultConfig,
   getBluetoothDeviceList,
